@@ -41,14 +41,39 @@ def expected_net_after_fee(price: str, quantity: int) -> float:
 
 
 def _clear_auth(client: AsyncClient) -> dict:
-    """Save all headers, clear them, return saved copy for restore."""
-    saved = dict(client.headers)
-    client.headers.clear()
+    """
+    Strip all auth credentials from the client so the next request is truly
+    anonymous.  The server sets an `access_token` cookie alongside the Bearer
+    header, and `get_current_user` falls back to it, so we must clear both.
+
+    Returns a dict with the saved values so _restore_auth can put them back.
+    """
+    saved: dict = {}
+
+    # 1. Authorization header
+    token = client.headers.get("authorization")
+    if token:
+        saved["authorization"] = token
+        del client.headers["authorization"]
+
+    # 2. Cookie(s) set by the login endpoint
+    for name in ("access_token", "refresh_token"):
+        value = client.cookies.get(name)
+        if value:
+            saved[f"cookie_{name}"] = value
+            del client.cookies[name]
+
     return saved
 
 
 def _restore_auth(client: AsyncClient, saved: dict) -> None:
-    client.headers.update(saved)
+    """Reinstate the credentials cleared by _clear_auth."""
+    if "authorization" in saved:
+        client.headers["Authorization"] = saved["authorization"]
+    for name in ("access_token", "refresh_token"):
+        key = f"cookie_{name}"
+        if key in saved:
+            client.cookies.set(name, saved[key])
 
 
 # ---------------------------------------------------------------------------

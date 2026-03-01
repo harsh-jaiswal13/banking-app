@@ -179,14 +179,20 @@ class StockService:
         account_id: int,
         stock_symbol: str, 
         quantity: int, 
-        price: Decimal
+        price=None,          # Optional[Decimal] — falls back to mock price when None
     ) -> dict:
         """Sell stocks - credit to savings account"""
         # Validate inputs
         stock_symbol = stock_symbol.upper()
         if quantity <= 0:
             raise BankingException("Quantity must be positive", status_code=400)
-        
+
+        # Resolve price: use provided value or fall back to current mock price
+        if price is None:
+            price = self.get_mock_price(stock_symbol)
+        else:
+            price = Decimal(str(price))  # normalise float/str → Decimal safely
+
         if price <= 0:
             raise BankingException("Price must be positive", status_code=400)
         

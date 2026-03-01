@@ -1,5 +1,5 @@
 # app/schemas/stock.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from decimal import Decimal
 from datetime import datetime
 from typing import Optional, List, TypeVar, Generic
@@ -17,14 +17,15 @@ class ApiResponse(BaseModel, Generic[T]):
     message: str
     data: Optional[T] = None
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "message": "Operation successful",
                 "data": {}
             }
         }
+    )
 
 
 class PaginatedApiResponse(BaseModel, Generic[T]):
@@ -37,8 +38,8 @@ class PaginatedApiResponse(BaseModel, Generic[T]):
     page_size: int
     total_pages: int
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "message": "Data retrieved",
@@ -49,6 +50,7 @@ class PaginatedApiResponse(BaseModel, Generic[T]):
                 "total_pages": 5
             }
         }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -71,14 +73,15 @@ class StockBuyRequest(BaseModel):
         examples=[1]
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "stock_symbol": "AAPL",
                 "quantity": 10,
                 "account_id": 1
             }
         }
+    )
 
 
 class StockSellRequest(BaseModel):
@@ -96,15 +99,15 @@ class StockSellRequest(BaseModel):
         description="ID of the savings account to credit",
         examples=[1]
     )
-    price: Optional[float] = Field(
+    price: Optional[Decimal] = Field(
         None,
         gt=0,
         description="Sell price per share. If omitted the current mock price is used.",
         examples=[180.0]
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "stock_symbol": "AAPL",
                 "quantity": 5,
@@ -112,6 +115,7 @@ class StockSellRequest(BaseModel):
                 "price": 180.0
             }
         }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -134,8 +138,8 @@ class StockTradeResponse(BaseModel):
     status: str
     timestamp: datetime
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "transaction_id": 42,
                 "transaction_number": "STK-20260301-0001",
@@ -151,6 +155,7 @@ class StockTradeResponse(BaseModel):
                 "timestamp": "2026-03-01T17:00:00"
             }
         }
+    )
 
 
 class StockHoldingDetail(BaseModel):
@@ -165,8 +170,8 @@ class StockHoldingDetail(BaseModel):
     profit_loss: float = Field(..., description="current_value − invested_value")
     profit_loss_percentage: float
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "holding_id": 7,
                 "stock_symbol": "AAPL",
@@ -179,6 +184,7 @@ class StockHoldingDetail(BaseModel):
                 "profit_loss_percentage": 2.56
             }
         }
+    )
 
 
 class PortfolioDetailResponse(BaseModel):
@@ -189,8 +195,8 @@ class PortfolioDetailResponse(BaseModel):
     total_profit_loss_percentage: float
     holdings: List[StockHoldingDetail]
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "total_invested": 5000.00,
                 "current_value": 5200.00,
@@ -199,6 +205,7 @@ class PortfolioDetailResponse(BaseModel):
                 "holdings": []
             }
         }
+    )
 
 
 class StockTransactionResponse(BaseModel):
@@ -214,8 +221,8 @@ class StockTransactionResponse(BaseModel):
     status: str
     timestamp: datetime
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "transaction_id": 1,
                 "transaction_number": "STK-20260301-0001",
@@ -229,6 +236,7 @@ class StockTransactionResponse(BaseModel):
                 "timestamp": "2026-03-01T12:00:00"
             }
         }
+    )
 
 
 class StockPriceResponse(BaseModel):
@@ -237,14 +245,15 @@ class StockPriceResponse(BaseModel):
     name: str = Field(..., description="Full company name")
     price: float = Field(..., description="Current mock price in USD")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "symbol": "AAPL",
                 "name": "Apple Inc.",
                 "price": 175.50
             }
         }
+    )
 
 
 # ---------------------------------------------------------------------------
