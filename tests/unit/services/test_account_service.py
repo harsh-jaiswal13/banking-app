@@ -42,16 +42,10 @@ def make_fake_account(
     status=AccountStatus.ACTIVE,
 ):
     """
-    Fake SQLAlchemy Account model object.
-
-    ROOT CAUSE OF THE BUG:
-        account.status = AccountStatus.ACTIVE  ← assigns a REAL enum
-        account.status.value = "active"        ← Python forbids setting .value on real enums
-                                                 → AttributeError: <enum> cannot set attribute
 
     THE FIX:
         account.status is left as a MagicMock (the default when you don't assign it).
-        MagicMock lets you set ANY attribute freely, including .value.
+        MagicMock lets you set ANY attribute freely, including.value.
         
         But the service does:  if account.status != AccountStatus.ACTIVE
         So we need account.status to equal AccountStatus.ACTIVE for active accounts.
