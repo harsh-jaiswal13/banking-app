@@ -68,6 +68,33 @@ def create_refresh_token(data: Dict[str, Any]) -> str:
     )
 
 
+
+def create_email_verification_token(
+    email: str,
+    expires_delta: Optional[timedelta] = None
+) -> str:
+    """
+    Create JWT token for email verification.
+    """
+
+    expire = datetime.now(timezone.utc) + (
+        expires_delta
+        if expires_delta
+        else timedelta(minutes=settings.EMAIL_VERIFICATION_EXPIRE_MINUTES)
+    )
+
+    payload: Dict[str, Any] = {
+        "sub": email,
+        "exp": expire,
+        "type": "email_verification"
+    }
+
+    return jwt.encode(
+        payload,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM
+    )
+
 # -------------------------
 # TOKEN DECODING
 # -------------------------

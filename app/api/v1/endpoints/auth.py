@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, Response, Cookie, HTTPException, status
+from fastapi import APIRouter, Depends, Response, Cookie, HTTPException, status, BackgroundTasks
 from typing import Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.session import get_db
+from fastapi.responses import RedirectResponse
 from app.services.auth import AuthService
-from app.schemas.user import UserCreate, UserLogin, TokenResponse, RefreshTokenRequest
+from app.schemas.user import UserCreate, UserLogin, RefreshTokenRequest
 from app.core.response import success_response
 from app.dependencies import get_current_user, get_auth_service
 
@@ -13,48 +12,32 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def register(
     user_data: UserCreate,
-    response: Response,
-    auth_service: AuthService = Depends(get_auth_service)
+    background_tasks: BackgroundTasks,
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Register a new user"""
-    result = await auth_service.register(
+
+    # Create user (unverified)
+    user = await auth_service.register(
         email=user_data.email,
         password=user_data.password,
         full_name=user_data.full_name,
         phone=user_data.phone
     )
-    
-    # Set tokens in HttpOnly cookies
-    response.set_cookie(
-        key="access_token",
-        value=result["access_token"],
-        httponly=True,
-        secure=False, 
-        samesite="strict",  
-        max_age=900, 
-        path="/"
-    )
-    
-    response.set_cookie(
-        key="refresh_token",
-        value=result["refresh_token"],
-        httponly=True,
-        secure=False,
-        samesite="strict",
-        max_age=604800, 
-        path="/auth/refresh" 
-    )
-    
-    # For testing we will send the tokens in the repons 
-    return success_response(
-        data={
-            "access_token": result["access_token"],
-            "refresh_token": result["refresh_token"],
-            "user": result.get("user"),
-        },
-        message="User registered successfully"
+
+    # Send verification email in background
+    background_tasks.add_task(
+        auth_service.send_welcome_email,
+        user_data.full_name,
+        user_data.email
     )
 
+    return success_response(
+        data={
+            "email": user_data.email
+        },
+        message="Registration successful. Verification email sent. Please check your inbox."
+    )
 
 @router.post("/login", response_model=dict)
 async def login(
@@ -67,7 +50,7 @@ async def login(
         email=credentials.email,
         password=credentials.password
     )
-    
+
     response.set_cookie(
         key="access_token",
         value=result["access_token"],
@@ -77,7 +60,7 @@ async def login(
         max_age=900,  # 15 minutes
         path="/"
     )
-    
+
     response.set_cookie(
         key="refresh_token",
         value=result["refresh_token"],
@@ -87,15 +70,15 @@ async def login(
         max_age=604800,  # 7 days
         path="/auth/refresh"
     )
-    
+
     return success_response(
         data={
             "user": result.get("user"),
             "access_token": result["access_token"],
             "refresh_token": result["refresh_token"],
         },
-        message="Login successful"
-    )
+    message="Login successful"
+)
 
 
 @router.post("/refresh", response_model=dict)
@@ -178,6 +161,45 @@ async def logout(response: Response):
         message="Logged out successfully"
     )
 
+# backend - modify the verify-email endpoint
+@router.get("/verify-email")
+async def verify_email(
+    token: str,
+    response: Response,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """
+    Verify user email using verification token,
+    set access/refresh cookies AND return tokens in response.
+    """
+
+    # Verify token and get user + tokens
+    result = await auth_service.verify_email(token)
+
+    # Set cookies for browser-based requests
+    response.set_cookie(
+        key="access_token",
+        value=result["access_token"],
+        httponly=True,
+        secure=False,  # ✅ set True in production
+        samesite="strict",
+        max_age=900,  # 15 minutes
+        path="/"
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=result["refresh_token"],
+        httponly=True,
+        secure=False,  # ✅ set True in production
+        samesite="strict",
+        max_age=604800,  # 7 days
+        path="/",  # Changed from "/auth/refresh"
+    )
+
+    # Redirect to frontend with tokens in URL query params
+    frontend_dashboard_url = f"http://localhost:5173/auth-callback?access_token={result['access_token']}&refresh_token={result['refresh_token']}"
+    return RedirectResponse(url=frontend_dashboard_url, status_code=status.HTTP_303_SEE_OTHER)
 
 @router.get("/me", response_model=dict)
 async def get_current_user_info(

@@ -6,6 +6,7 @@ from app.core.security import (
     get_password_hash,
     create_access_token,
     create_refresh_token,
+    create_email_verification_token,
     decode_token
 )
 from app.core.exceptions import (
@@ -14,7 +15,7 @@ from app.core.exceptions import (
     UnauthorizedException
 )
 from app.config import settings
-
+from app.integerations.email.client import send_email,render_email, EmailSendError
 
 class AuthService:
     """Authentication service"""
@@ -135,3 +136,53 @@ class AuthService:
             "refresh_token": refresh_token,
             "token_type": "bearer"
         }
+    async def verify_email(self, token: str) -> bool:
+        """Verify user email using token"""
+        payload = decode_token(token, expected_type="email_verification")
+        print(payload)
+        if not payload:
+            raise UnauthorizedException("Invalid token")
+        
+        email = payload.get("sub")
+        if not email:
+            raise UnauthorizedException("Invalid token payload")
+        
+        user = await self.user_repo.get_by_email(email)
+        if not user:
+            raise UnauthorizedException("User not found")
+        
+        tokens = self._generate_tokens(user.user_id, email)
+        print(tokens)
+        return {
+            **tokens,
+            "user": {
+                "user_id"   : user.user_id,
+                "email"     : user.email,
+                "full_name" : user.full_name,
+                "phone"     : user.phone,
+                "kyc_status": user.kyc_status.value,
+                "created_at": user.created_at
+            }
+        }
+
+    async def send_welcome_email(self,full_name:str,user_email: str):
+        token = create_email_verification_token(user_email)
+        html = await render_email(
+            "registeration_verification.html",
+            {
+                "name": full_name,
+                "verification_url": f'{settings.APP_URL}/api/v1/auth/verify-email?token={token}'
+            }
+        )
+
+        await send_email(
+            smtp_server=settings.SMTP_SERVER,
+            smtp_port=settings.SMTP_PORT,
+            sender_email=settings.SENDER_EMAIL,
+            app_password=settings.APP_PASSWORD,
+            recipients=[user_email],
+            subject= "Welcome!",
+            text_content= "Welcome to our platform!",
+            html_content= html
+        )
+      

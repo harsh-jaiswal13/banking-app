@@ -1,50 +1,6 @@
 BACKEND ENGINEER – LEARNING PATH (Basic → Advanced)
 Arranged so each section builds on the previous one.
-
-═══════════════════════════════════════════════════════
-STAGE 1 – FOUNDATIONS
-(Before anything else, master these)
-═══════════════════════════════════════════════════════
-
---- Python Basics (assumed, but verify) ---
-- Variables, types, control flow, functions
-- List comprehensions, generators basics
-- Error handling: try/except/finally
-- File I/O and context managers (with statement)
-- Modules and packages, import system basics    
-- Virtual environments: venv, pip, requirements.txt
-
---- HTTP & Web Fundamentals ---
-- HTTP methods: GET, POST, PUT, PATCH, DELETE
-- Status codes: 2xx, 3xx, 4xx, 5xx – common ones
-- Request/response structure: headers, body, query params
-- JSON: serialization, deserialization
-- REST principles: statelessness, resources, uniform interface
-- URL structure and query strings
-- What happens when you type a URL in a browser (DNS, TCP, TLS)
-- Basic curl / Postman usage for API testing
-
---- Linux & Terminal Basics ---
-- File system navigation: ls, cd, pwd, find, grep
-- File permissions: chmod, chown
-- Process management: ps, top, kill
-- Environment variables: export, .env files
-- SSH basics
-- Pipes and redirection: |, >, >>
-- Basic bash scripting: variables, loops, conditionals
-- Package managers: apt, brew
-
---- Git & Version Control ---
-- init, clone, add, commit, push, pull
-- Branching: branch, checkout, merge
-- Rebasing vs merging – when to use each
-- Resolving merge conflicts
-- .gitignore
-- Git log and bisect for debugging
-- Pull request workflow and code review basics
-- Conventional commits
-
-═══════════════════════════════════════════════════════
+══════
 STAGE 2 – BACKEND CORE
 (Build your first real APIs)
 ═══════════════════════════════════════════════════════
@@ -495,26 +451,6 @@ STAGE 11 – KUBERNETES & CLOUD
 - StatefulSets for databases
 - Helm: writing and using charts
 - kubectl commands for debugging: logs, exec, describe, events
-
---- Terraform (IaC) ---
-- Providers, resources, data sources
-- State file: what it is, why it matters
-- Remote state backends (S3 + DynamoDB locking)
-- Modules for reuse
-- Plan / apply workflow in CI
-- Import existing resources
-- Workspaces for environments
-
---- Cloud (one provider deeply) ---
-- Compute: managed container services (ECS, Cloud Run, AKS)
-- IAM: roles, policies, least privilege, instance profiles
-- Networking: VPC, subnets, security groups, NAT gateway
-- Managed databases: RDS, CloudSQL, Aurora
-- Object storage: S3 / GCS – lifecycle, presigned URLs
-- Managed queues: SQS, SNS, Pub/Sub
-- CDN: CloudFront, Cloud CDN
-- Secrets manager: AWS Secrets Manager, GCP Secret Manager
-- Cost visibility: tagging resources, setting budgets and alerts
 
 --- CI/CD ---
 - Pipeline stages: lint → test → build → scan → deploy

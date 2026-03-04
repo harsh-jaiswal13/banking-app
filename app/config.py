@@ -40,6 +40,15 @@ class Settings(BaseSettings):
     # Stock Trading (Mock configuration)
     STOCK_TRANSACTION_FEE: float = 0.1  # 0.1% transaction fee
     
+    APP_URL: str = "http://localhost:8000"
+    EMAIL_VERIFICATION_EXPIRE_MINUTES: int = 5
+
+    SMTP_SERVER :str = "smtp.gmail.com"
+    SMTP_PORT :str = 587
+    SENDER_EMAIL :str = "harshjaiswal@hiteshi.com"
+    APP_PASSWORD :str = "wqjvwjzqjhsgztve"
+
+
     class Config:
         env_file = ".env"
         case_sensitive = True
